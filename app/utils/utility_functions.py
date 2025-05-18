@@ -57,7 +57,7 @@ class Utils:
         else:
             try:
                 formatted_time = datetime.strptime(datetime_str, format_str)
-            except Exception as e:
+            except ValueError as e:
                 return e
 
         raise ValueError("Invalid datetime format")

@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from langchain_community.vectorstores import OpenSearchVectorSearch
 from langchain_openai import OpenAIEmbeddings
-from opensearchpy import OpenSearch, OpenSearchException,RequestsHttpConnection
+from opensearchpy import OpenSearch, OpenSearchException, RequestsHttpConnection
 from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
  
@@ -45,7 +45,7 @@ class handle_embeddings:
                 retry_on_timeout=True,
                 max_retries=3
             )
-        except Exception as e:
+        except OpenSearchException as e:
             print(f"Error creating vectorstore: {str(e)}")
             return None
    
@@ -116,7 +116,7 @@ class handle_embeddings:
                     vectorstore.add_documents(documents=batch)
                     successful_embeddings += len(batch)
                     print(f"Progress: {successful_embeddings}/{total_docs} chunks embedded")
-                except Exception as e:
+                except OpenSearchException as e:
                     print(f"Error embedding batch {i//batch_size + 1}: {str(e)}")
  
             return successful_embeddings

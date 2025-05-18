@@ -8,6 +8,7 @@ from PyPDF2 import PdfReader
 import sys
 import boto3
 import botocore.session
+from botocore.exceptions import BotoCoreError, ClientError
 from app.utils.utility_functions import Utils
 from typing import Dict, Optional, List, Tuple
 from dotenv import load_dotenv
@@ -48,7 +49,7 @@ class S3FileHandler:
             response = self.s3_client.get_object(Bucket=self.bucket_name, Key=object_name)
             content = response["Body"].read().decode("utf-8")
             return content
-        except Exception as e:
+        except (BotoCoreError, ClientError) as e:
             print(f"Error accessing S3 file: {e}")
             return None
  
@@ -62,7 +63,7 @@ class S3FileHandler:
         # Check if file exists before attempting to read it
         try:
             self.s3_client.head_object(Bucket=self.bucket_name, Key=object_name)
-        except Exception as e:
+        except (BotoCoreError, ClientError) as e:
             if "NoSuchKey" in str(e) or "Not Found" in str(e):
                 print(f"⚠️ File '{object_name}' does not exist in bucket '{self.bucket_name}'.")
                 print(f"⚠️ You need to process PDF files first using the /inject_bronze_to_silver endpoint.")

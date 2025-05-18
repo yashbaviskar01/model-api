@@ -2,6 +2,8 @@ import os
 import json
 import boto3
 from fastapi import APIRouter, HTTPException
+from botocore.exceptions import BotoCoreError, ClientError
+from openai import OpenAIError
 from app.modules.fetch import S3FileHandler
 from app.utils.llm import generate_embedding
 from app.modules.s3_config import fetch_table_metadata_from_s3
@@ -28,7 +30,7 @@ async def inject_data():
     try:
         inject = S3FileHandler()
         return inject.process_all_pdfs()
-    except Exception as e:
+    except (BotoCoreError, ClientError) as e:
         logger.error(f"Error in inject_data: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
@@ -53,7 +55,7 @@ def create_knowledge_base():
             logger.warning(f"Embedding creation failed, not deleting source files: {result.get('message')}")
             
         return result
-    except Exception as e:
+    except (BotoCoreError, ClientError) as e:
         logger.error(f"Error in create_knowledge_base: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
@@ -72,8 +74,10 @@ async def generate_description(request: TableReq) -> TableResp:
         logger.info(f"Results: {results}")
         description = generate_table_description(results, request.table_name)
         return TableResp(description=description)
-    except Exception as e:
-        logger.error(f"Error generating description for table {request.table_name}: {e}")
+    except (BotoCoreError, ClientError) as e:
+        logger.error(
+            f"Error generating description for table {request.table_name}: {e}"
+        )
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
@@ -96,7 +100,7 @@ async def store_table_embedding(request: TableReq) -> TableResp:
         
         return TableResp(description=f"Table {request.table_name} Description and embedding stored successfully.")
     
-    except Exception as e:
+    except (BotoCoreError, ClientError, OpenAIError) as e:
         logger.error(f"Error processing table {request.table_name}: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
@@ -123,6 +127,6 @@ async def chat_endpoint(request: ChatRequest):
             )
         else:
             raise HTTPException(status_code=500, detail="Failed to generate final answer.")
-    except Exception as e:
+    except OpenAIError as e:
         logger.error(f"Error in chat endpoint: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
