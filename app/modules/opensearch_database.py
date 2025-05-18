@@ -1,7 +1,12 @@
 import os
 import boto3
 from dotenv import load_dotenv
-from opensearchpy import OpenSearch, Urllib3AWSV4SignerAuth, Urllib3HttpConnection
+from opensearchpy import (
+    OpenSearch,
+    Urllib3AWSV4SignerAuth,
+    Urllib3HttpConnection,
+    exceptions as opensearch_exceptions,
+)
 from loguru import logger
 
 # Load Credentials
@@ -37,7 +42,7 @@ try:
         print("Successfully connected to OpenSearch.")
     else:
         print("Failed to connect to OpenSearch.")
-except Exception as e:
+except opensearch_exceptions.OpenSearchException as e:
     print(f"Error connecting to OpenSearch: {e}")
 
 
@@ -71,7 +76,7 @@ def create_index_if_not_exists(index_name: str, embedding_dimension: int):
             }
             opensearch_client.indices.create(index=index_name, body=index_body)
             logger.info(f"Index {index_name} created successfully with cosine similarity.")
-    except Exception as e:
+    except opensearch_exceptions.OpenSearchException as e:
         logger.error(f"Error creating index {index_name}: {e}")
         raise
 
@@ -123,6 +128,6 @@ def store_table_embedding_to_opensearch(table_name: str, table_description: str,
             response = opensearch_client.index(index=OPENSEARCH_INDEX, body=document)
             logger.info(f"Document indexed in OpenSearch with ID: {response['_id']}")
 
-    except Exception as e:
+    except opensearch_exceptions.OpenSearchException as e:
         logger.error(f"Error storing or updating embedding in OpenSearch: {e}")
         raise

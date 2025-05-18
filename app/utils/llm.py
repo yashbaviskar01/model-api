@@ -3,7 +3,7 @@ import textwrap
 from dotenv import load_dotenv
 from loguru import logger
 import openai  # Import the OpenAI package for embeddings
-from openai import OpenAI  # Used for the OpenRouter client
+from openai import OpenAI, OpenAIError  # Used for the OpenRouter client and error handling
 from app.modules.s3_config import upload_to_s3
 
 load_dotenv()
@@ -105,7 +105,7 @@ def generate_table_description(result, table_name: str):
 
         return description
 
-    except Exception as e:
+    except OpenAIError as e:
         logger.error(f"Error invoking OpenAI model or uploading file to S3: {e}")
         return "Error generating description from OpenAI model."
 
@@ -123,6 +123,6 @@ def generate_embedding(text: str):
         embedding = response.data[0].embedding
         logger.info("Embedding generated successfully using OpenAI.")
         return embedding
-    except Exception as e:
+    except OpenAIError as e:
         logger.error(f"Error generating embedding: {e}")
         raise

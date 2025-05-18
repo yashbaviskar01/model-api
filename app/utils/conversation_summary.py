@@ -1,4 +1,4 @@
-from openai import OpenAI
+from openai import OpenAI, OpenAIError
 import os
 from loguru import logger
 from typing import Optional
@@ -34,6 +34,6 @@ def generate_conversation_summary(question: str) -> Optional[str]:
 
         return summary_text
 
-    except Exception as e:
+    except OpenAIError as e:
         logger.error(f"Failed to generate conversation summary: {e}")
         return question

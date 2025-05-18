@@ -1,6 +1,7 @@
 import os
 import logging
 import boto3
+from botocore.exceptions import BotoCoreError, ClientError
 
 # S3 bucket name is expected to be set as an environment variable.
 S3_PROMPT_BUCKET_NAME = os.getenv("S3_PROMPT_BUCKET_NAME")
@@ -20,7 +21,7 @@ def get_prompt(prompt_name: str) -> str:
         response = s3_client.get_object(Bucket=S3_PROMPT_BUCKET_NAME, Key=key)
         content = response["Body"].read().decode("utf-8")
         return content
-    except Exception as e:
+    except (BotoCoreError, ClientError) as e:
         logging.error(f"Error fetching prompt '{prompt_name}' from S3: {e}")
         return ""
 
@@ -34,6 +35,6 @@ def update_prompt(prompt_name: str, content: str) -> bool:
     try:
         s3_client.put_object(Bucket=S3_PROMPT_BUCKET_NAME, Key=key, Body=content)
         return True
-    except Exception as e:
+    except (BotoCoreError, ClientError) as e:
         logging.error(f"Error updating prompt '{prompt_name}' in S3: {e}")
         return False

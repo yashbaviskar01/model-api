@@ -1,5 +1,5 @@
 import boto3
-from botocore.exceptions import NoCredentialsError
+from botocore.exceptions import BotoCoreError, ClientError, NoCredentialsError
 import os
 from loguru import logger
 from dotenv import load_dotenv
@@ -21,7 +21,7 @@ def get_s3_client() -> boto3.client:
     except NoCredentialsError:
         logger.error("AWS credentials not found.")
         raise
-    except Exception as e:
+    except (BotoCoreError, ClientError) as e:
         logger.error(f"Error initializing S3 client: {e}")
         raise
 
@@ -34,7 +34,7 @@ def upload_to_s3(content: str, object_key: str) -> None:
         s3_client = get_s3_client()
         s3_client.put_object(Body=content, Bucket=S3_SCHEMA_BUCKET_NAME, Key=object_key)
         logger.info(f"File uploaded successfully to {S3_SCHEMA_BUCKET_NAME}/{object_key}.")
-    except Exception as e:
+    except (BotoCoreError, ClientError) as e:
         logger.error(f"Error uploading content to S3: {e}")
         raise
     
@@ -50,6 +50,6 @@ def fetch_table_metadata_from_s3(table_name: str) -> str:
         content = response['Body'].read().decode('utf-8')
         logger.info(f"Metadata file for table {table_name} fetched successfully.")
         return content
-    except Exception as e:
+    except (BotoCoreError, ClientError) as e:
         logger.error(f"Error fetching metadata for table {table_name}: {e}")
         raise

@@ -1,5 +1,6 @@
 import os
 import boto3
+from botocore.exceptions import BotoCoreError, ClientError
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,6 +14,6 @@ def upload_to_s3():
         s3_client = boto3.client("s3")
         s3_client.upload_file(FILE_PATH, BUCKET_NAME, S3_OBJECT_NAME)
         print(f"File uploaded successfully to s3://{BUCKET_NAME}/{S3_OBJECT_NAME}")
-    except Exception as e:
+    except (BotoCoreError, ClientError) as e:
         print(f"Error uploading file: {e}")
 upload_to_s3()
